@@ -9,6 +9,9 @@ export interface SunConfig {
 
 export type Vector3Tuple = [number, number, number];
 
+const HOURS_IN_DAY = 24;
+const MINUTES_IN_DAY = HOURS_IN_DAY * 60;
+
 function rotateAroundY(point: Vector3Tuple, degrees: number): Vector3Tuple {
 	const angle = (degrees * Math.PI) / 180;
 	const [x, y, z] = point;
@@ -36,7 +39,7 @@ export function generateSunPath(date: Date, config: SunConfig, segments = 96): V
 	const startOfDay = new Date(date);
 	startOfDay.setHours(0, 0, 0, 0);
 	const points: Vector3Tuple[] = [];
-	const minutesPerSegment = (24 * 60) / segments;
+	const minutesPerSegment = MINUTES_IN_DAY / segments;
 
 	for (let index = 0; index <= segments; index += 1) {
 		const sample = new Date(startOfDay.getTime() + minutesPerSegment * index * 60 * 1000);
@@ -44,6 +47,75 @@ export function generateSunPath(date: Date, config: SunConfig, segments = 96): V
 	}
 
 	return points;
+}
+
+export function generateDayPath(date: Date, config: SunConfig, stepMinutes = 60): Vector3Tuple[] {
+	const startOfDay = new Date(date);
+	startOfDay.setHours(0, 0, 0, 0);
+	const positions: Vector3Tuple[] = [];
+
+	for (let minutes = 0; minutes <= MINUTES_IN_DAY; minutes += stepMinutes) {
+		const sample = new Date(startOfDay.getTime() + minutes * 60 * 1000);
+		positions.push(computeSunPosition(sample, config));
+	}
+
+	return positions;
+}
+
+export interface AnalemmaPath {
+	hour: number;
+	points: Vector3Tuple[];
+}
+
+export function generateAnalemmaPaths(
+	config: SunConfig,
+	hours: number[] = Array.from({ length: 11 }, (_, index) => index + 7),
+): AnalemmaPath[] {
+	const base = new Date(Date.UTC(2022, 0, 1, 0, 0, 0));
+	const dayCount = 365;
+	return hours.map((hour) => {
+		const points: Vector3Tuple[] = [];
+		for (let day = 0; day < dayCount; day += 1) {
+			const sample = new Date(base.getTime());
+			sample.setUTCDate(sample.getUTCDate() + day);
+			sample.setUTCHours(hour, 0, 0, 0);
+			points.push(computeSunPosition(sample, config));
+		}
+		return { hour, points };
+	});
+}
+
+export function generateSunSurface(config: SunConfig, monthStep = 1, hourStep = 1) {
+	const vertices: Vector3Tuple[] = [];
+	for (let month = 0; month < 12 - monthStep; month += monthStep) {
+		for (let hour = 0; hour < HOURS_IN_DAY; hour += hourStep) {
+			const date = new Date(Date.UTC(2022, month, 1, hour, 0, 0));
+			const nextHour = hour + hourStep;
+			const nextMonth = month + monthStep;
+
+			if (nextHour > HOURS_IN_DAY || nextMonth > 11) {
+				continue;
+			}
+
+			const basePos = computeSunPosition(date, config);
+			const hourPos = computeSunPosition(
+				new Date(Date.UTC(2022, month, 1, nextHour, 0, 0)),
+				config,
+			);
+			const monthPos = computeSunPosition(
+				new Date(Date.UTC(2022, nextMonth, 1, hour, 0, 0)),
+				config,
+			);
+			const diagonalPos = computeSunPosition(
+				new Date(Date.UTC(2022, nextMonth, 1, nextHour, 0, 0)),
+				config,
+			);
+
+			vertices.push(basePos, hourPos, monthPos, monthPos, hourPos, diagonalPos);
+		}
+	}
+
+	return vertices;
 }
 
 export interface SunEvents {
