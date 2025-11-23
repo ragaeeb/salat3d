@@ -18,10 +18,9 @@ import { DynamicSky, SkyControl } from './systems/DynamicSky'
 import { createPlayer } from './systems/player'
 
 import gsap from 'gsap'
-import { PerspectiveCamera, Scene, WebGLRenderer, Mesh, BufferGeometry, Float32BufferAttribute, CylinderGeometry, MeshStandardMaterial, MeshBasicMaterial } from 'three'
+import { PerspectiveCamera, Scene, WebGLRenderer, Mesh } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
+
 import GUI from 'lil-gui'
 
 class World {
@@ -50,7 +49,7 @@ class World {
     this.controls = createControls(this.activeCamera, this.renderer.domElement)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    this.controls.tick = (delta: number) => this.controls.update();
+    this.controls.tick = (_delta: number) => this.controls.update();
 
     const params: SunPathParams = {
       animateTime: true,

@@ -14,7 +14,7 @@ function createControls(camera: Camera, canvas: HTMLElement) {
   controls.maxDistance = 200;
   // controls.maxPolarAngle = Math.PI / 2
 
-  controls.tick = (delta: number) => controls.update();
+  controls.tick = (_delta: number) => controls.update();
 
   return controls;
 }

@@ -7,7 +7,6 @@ import {
   Mesh,
   MeshStandardMaterial,
   MeshBasicMaterial,
-  MathUtils
 } from 'three';
 import { SunPathParams } from '../systems/SunPath';
 
@@ -93,8 +92,7 @@ function createBase(params: SunPathParams) {
 
   base.add(arrowN, arrowS, arrowL, arrowO);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  base.tick = (delta: number) => {
+  base.tick = (_delta: number) => {
     // base.rotation.y += delta * radiansPerSecond; // currently disabled
   };
 
