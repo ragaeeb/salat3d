@@ -1,6 +1,6 @@
-import { Box3, Vector3 } from 'three'
-import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+import { Box3, Vector3, Mesh } from 'three'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { setupModel } from './setupModel'
 
 async function loadHouse() {
@@ -11,15 +11,17 @@ async function loadHouse() {
   const houseData = await gltfLoader.loadAsync('/assets/models/House-c.glb')
   const house = setupModel(houseData)
   house.traverse(n => {
-    if (n.isMesh) {
-      if (n.material.name === 'esquadria.vidro') {
-        n.castShadow = false
+    if ((n as Mesh).isMesh) {
+      const material = (n as Mesh).material;
+      const matName = Array.isArray(material) ? '' : (material as any).name;
+      if (matName === 'esquadria.vidro') {
+        n.castShadow = false;
       } else {
-        n.castShadow = true
-        n.receiveShadow = true
+        n.castShadow = true;
+        n.receiveShadow = true;
       }
     }
-  })
+  });
 
   const box = new Box3().setFromObject(house)
   const center = box.getCenter(new Vector3())

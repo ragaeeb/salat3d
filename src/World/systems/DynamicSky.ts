@@ -1,8 +1,21 @@
-import { Vector3 } from 'three'
-import { Sky } from 'three/addons/objects/Sky.js'
+import { Vector3, WebGLRenderer, Object3D } from 'three'
+import { Sky } from 'three/examples/jsm/objects/Sky.js'
+
+export interface SkyControl {
+  turbidity: number;
+  rayleigh: number;
+  mieCoefficient: number;
+  mieDirectionalG: number;
+  exposure: number;
+}
 
 class DynamicSky {
-  constructor(skyControl, sphereLight, renderer) {
+  skyControl: SkyControl;
+  sky: Sky;
+  renderer: WebGLRenderer;
+  sphereLight: Object3D;
+
+  constructor(skyControl: SkyControl, sphereLight: Object3D, renderer: WebGLRenderer) {
     this.skyControl = skyControl
     this.sky = new Sky()
     this.renderer = renderer

@@ -1,16 +1,16 @@
-import { AxesHelper, CameraHelper, DirectionalLightHelper } from "three"
+import { AxesHelper, CameraHelper, DirectionalLight, DirectionalLightHelper } from "three"
 
-function createDirectionalLightHelper(light) {
+function createDirectionalLightHelper(light: DirectionalLight): DirectionalLightHelper {
   const directionalLightHelper = new DirectionalLightHelper(light)
   return directionalLightHelper
 }
 
-function createShadowCameraHelper(light) {
+function createShadowCameraHelper(light: DirectionalLight): CameraHelper {
   const shadowCameraHelper = new CameraHelper(light.shadow.camera)
   return shadowCameraHelper
 }
 
-function createAxesHelper(size) {
+function createAxesHelper(size: number): AxesHelper {
   const axesHelper = new AxesHelper(size)
   return axesHelper
 }

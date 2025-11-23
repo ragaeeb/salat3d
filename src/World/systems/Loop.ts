@@ -1,9 +1,18 @@
-import { Clock } from 'three';
+import { Clock, Camera, Scene, WebGLRenderer } from 'three';
+
+interface Updatable {
+  tick(delta: number): void;
+}
 
 const clock = new Clock();
 
 class Loop {
-  constructor(camera, scene, renderer) {
+  camera: Camera;
+  scene: Scene;
+  renderer: WebGLRenderer;
+  updatables: Updatable[];
+
+  constructor(camera: Camera, scene: Scene, renderer: WebGLRenderer) {
     this.camera = camera;
     this.scene = scene;
     this.renderer = renderer;

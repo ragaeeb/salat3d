@@ -1,10 +1,35 @@
 import { getPosition } from 'suncalc'
-import { BufferGeometry, DoubleSide, Float32BufferAttribute, Group, LineBasicMaterial, LineDashedMaterial, LineLoop, MathUtils, Mesh, MeshBasicMaterial } from 'three'
+import { BufferGeometry, DoubleSide, Float32BufferAttribute, Group, LineBasicMaterial, LineDashedMaterial, LineLoop, MathUtils, Mesh, MeshBasicMaterial, DirectionalLight, Object3D } from 'three'
+
+export interface SunPathParams {
+  hour: number;
+  minute: number;
+  day: number;
+  month: number;
+  latitude: number;
+  longitude: number;
+  radius: number;
+  showAnalemmas: boolean;
+  showSunSurface: boolean;
+  showSunDayPath: boolean;
+  northOffset: number;
+  animateTime: boolean;
+  timeSpeed: number;
+  shadowBias: number;
+  baseY: number;
+}
 
 class SunPath {
-  constructor(params, sunSphere, sunLight, base) {
+  params: SunPathParams;
+  date: number;
+  timeText: Element | null;
+  sunLight: DirectionalLight;
+  sunPathLight: Group;
+  sphereLight: Group;
+
+  constructor(params: SunPathParams, sunSphere: Mesh, sunLight: DirectionalLight, base: Object3D) {
     this.params = params
-    this.date = new Date('2022-01-01T07:00:00')
+    // this.date = new Date('2022-01-01T07:00:00').getTime() // Overwritten immediately
     this.date = new Date().setHours(params.hour)
     this.date = new Date(this.date).setMonth(params.month - 1)
     this.timeText = document.querySelector('.time')
@@ -20,8 +45,8 @@ class SunPath {
     this.updateNorth()
   }
 
-  getSunPosition(date) {
-    let sunPosition = getPosition(date, this.params.latitude, this.params.longitude)
+  getSunPosition(date: number | Date) {
+    let sunPosition = getPosition(new Date(date), this.params.latitude, this.params.longitude)
     let x = this.params.radius * (Math.cos(sunPosition.altitude)) * (Math.cos(sunPosition.azimuth))
     let z = this.params.radius * (Math.cos(sunPosition.altitude)) * (Math.sin(sunPosition.azimuth))
     let y = this.params.radius * (Math.sin(sunPosition.altitude))
@@ -31,12 +56,12 @@ class SunPath {
   drawAnalemmas() {
     if (this.params.showAnalemmas) {
       let analemmaPath = this.sunPathLight.getObjectByName('analemmaPath')
-      this.sunPathLight.remove(analemmaPath)
+      if (analemmaPath) this.sunPathLight.remove(analemmaPath)
       let analemmas = new Group()
       for (let h = 7; h < 18; h++) {
         let vertices = []
-        let from = new Date(2022,0,1)
-        let to = new Date(2023,0,1)
+        let from = new Date(2022, 0, 1)
+        let to = new Date(2023, 0, 1)
         for (let d = from; d < to; d.setDate(d.getDate() + 1)) {
           let date = new Date(d).setHours(h)
           let sunPosition = this.getSunPosition(date)
@@ -61,33 +86,33 @@ class SunPath {
       this.sunPathLight.add(analemmas)
     } else {
       let analemmaPath = this.sunPathLight.getObjectByName('analemmaPath')
-      this.sunPathLight.remove(analemmaPath)
+      if (analemmaPath) this.sunPathLight.remove(analemmaPath)
     }
   }
 
   drawSunSurface() {
     if (this.params.showSunSurface) {
       let sunSurface = this.sunPathLight.getObjectByName('sunSurface')
-      this.sunPathLight.remove(sunSurface)
+      if (sunSurface) this.sunPathLight.remove(sunSurface)
       let vertices = []
       for (let m = 0; m < 6; m++) {
-        let date = new Date('2022-01-01T00:00:00')
+        let dateVal = new Date('2022-01-01T00:00:00').getTime()
         for (let h = 0; h < 24; h++) {
-          date = new Date(date).setMonth(m)
-          date = new Date(date).setHours(h)
-          let sunPosition = this.getSunPosition(date)
+          dateVal = new Date(dateVal).setMonth(m)
+          dateVal = new Date(dateVal).setHours(h)
+          let sunPosition = this.getSunPosition(dateVal)
           vertices.push(sunPosition.x, sunPosition.y, sunPosition.z)
-          date = new Date(date).setHours(h+1)
-          let sunPosition2 = this.getSunPosition(date)
+          dateVal = new Date(dateVal).setHours(h + 1)
+          let sunPosition2 = this.getSunPosition(dateVal)
           vertices.push(sunPosition2.x, sunPosition2.y, sunPosition2.z)
-          date = new Date(date).setMonth(m+1)
-          date = new Date(date).setHours(h)
-          let sunPosition3 = this.getSunPosition(date)
+          dateVal = new Date(dateVal).setMonth(m + 1)
+          dateVal = new Date(dateVal).setHours(h)
+          let sunPosition3 = this.getSunPosition(dateVal)
           vertices.push(sunPosition3.x, sunPosition3.y, sunPosition3.z)
           vertices.push(sunPosition3.x, sunPosition3.y, sunPosition3.z)
           vertices.push(sunPosition2.x, sunPosition2.y, sunPosition2.z)
-          date = new Date(date).setHours(h+1)
-          let sunPosition4 = this.getSunPosition(date)
+          dateVal = new Date(dateVal).setHours(h + 1)
+          let sunPosition4 = this.getSunPosition(dateVal)
           vertices.push(sunPosition4.x, sunPosition4.y, sunPosition4.z)
         }
       }
@@ -104,7 +129,7 @@ class SunPath {
       this.sunPathLight.add(surfaceMesh)
     } else {
       let sunSurface = this.sunPathLight.getObjectByName('sunSurface')
-      this.sunPathLight.remove(sunSurface)
+      if (sunSurface) this.sunPathLight.remove(sunSurface)
     }
   }
 
@@ -136,13 +161,13 @@ class SunPath {
   updateSunPosition() {
     let sunPosition = this.getSunPosition(this.date)
     this.sphereLight.position.set(sunPosition.x, sunPosition.y, sunPosition.z)
-    this.sunLight.lookAt(0,0,0)
+    this.sunLight.lookAt(0, 0, 0)
   }
 
   drawSunDayPath() {
     if (this.params.showSunDayPath) {
       let dayPath = this.sunPathLight.getObjectByName('dayPath')
-      this.sunPathLight.remove(dayPath)
+      if (dayPath) this.sunPathLight.remove(dayPath)
       let pathMaterial = new LineBasicMaterial({
         color: 'red',
         linewidth: 5,
@@ -162,11 +187,11 @@ class SunPath {
       this.sunPathLight.add(path)
     } else {
       let dayPath = this.sunPathLight.getObjectByName('dayPath')
-      this.sunPathLight.remove(dayPath)
+      if (dayPath) this.sunPathLight.remove(dayPath)
     }
   }
 
-  tick(delta) {
+  tick(delta: number) {
     let date = new Date(this.date)
     // this.timeText.innerHTML = 'Hora: ' + date.getHours() + ':' + date.getMinutes() + ' - Data: ' + date.getDate() + '/' + month
     if (this.params.animateTime) {

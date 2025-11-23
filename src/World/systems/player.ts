@@ -1,21 +1,21 @@
-import { Octree } from 'three/addons/math/Octree.js'
-import { Capsule } from 'three/addons/math/Capsule.js'
-import { Vector3 } from 'three'
+import { Octree } from 'three/examples/jsm/math/Octree.js'
+import { Capsule } from 'three/examples/jsm/math/Capsule.js'
+import { Vector3, Camera, Object3D } from 'three'
 
-function createPlayer(camera, geometry) {
+function createPlayer(camera: Camera, geometry: Object3D) {
   const GRAVITY = 30;
   const STEPS_PER_FRAME = 5;
 
   const worldOctree = new Octree();
-  const playerCollider = new Capsule(new Vector3(0, 1.35, 15), new Vector3(0, 2.8, 15), 0.25);
+  const playerCollider = new Capsule(new Vector3(0, 1.35, 15), new Vector3(0, 2.8, 15), 0.25) as Capsule & { tick: (delta: number) => void };
 
   const playerVelocity = new Vector3();
   const playerDirection = new Vector3();
 
   let playerOnFloor = false;
-  let mouseTime = 0;
+  // let mouseTime = 0;
 
-  const keyStates = {};
+  const keyStates: Record<string, boolean> = {};
 
   document.addEventListener('keydown', (event) => {
 
@@ -76,7 +76,7 @@ function createPlayer(camera, geometry) {
 
   }
 
-  function updatePlayer(deltaTime) {
+  function updatePlayer(deltaTime: number) {
 
     let damping = Math.exp(- 4 * deltaTime) - 1;
 
@@ -121,7 +121,7 @@ function createPlayer(camera, geometry) {
 
   }
 
-  function controls(deltaTime) {
+  function controls(deltaTime: number) {
 
     // gives a bit of air control
     const speedDelta = deltaTime * (playerOnFloor ? 25 : 8);

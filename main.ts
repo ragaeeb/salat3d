@@ -5,6 +5,7 @@ async function main() {
   const container = document.querySelector('#scene-container');
 
   // 1. Create an instance of the World app
+  if (!container) throw new Error('Scene container not found');
   const world = new World(container);
 
   // Complete async tasks

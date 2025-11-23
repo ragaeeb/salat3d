@@ -1,6 +1,6 @@
 import { PerspectiveCamera } from 'three'
 
-function createFirstPersonCamera() {
+function createBirdCamera(): PerspectiveCamera {
   const camera = new PerspectiveCamera(
     40, // fov = Field Of View
     1, // aspect ratio (dummy value)
@@ -9,11 +9,10 @@ function createFirstPersonCamera() {
   );
 
   // move the camera back so we can view the scene
-  camera.rotation.order = 'YXZ';
-  // camera.position.set(20, 5, 20)
-  // camera.lookAt(0,0,0)
+  camera.position.set(50, 50, 50)
+  camera.lookAt(0, 0, 0)
 
   return camera
 }
 
-export { createFirstPersonCamera }
+export { createBirdCamera }

@@ -1,4 +1,6 @@
-const setSize = (container, camera, renderer) => {
+import { PerspectiveCamera, WebGLRenderer } from 'three';
+
+const setSize = (container: Element, camera: PerspectiveCamera, renderer: WebGLRenderer) => {
   camera.aspect = container.clientWidth / container.clientHeight;
   camera.updateProjectionMatrix();
 
@@ -7,7 +9,11 @@ const setSize = (container, camera, renderer) => {
 };
 
 class Resizer {
-  constructor(container, camera, renderer) {
+  container: Element;
+  camera: PerspectiveCamera;
+  renderer: WebGLRenderer;
+
+  constructor(container: Element, camera: PerspectiveCamera, renderer: WebGLRenderer) {
     this.container = container
     this.camera = camera
     this.renderer = renderer

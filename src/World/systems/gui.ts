@@ -1,6 +1,25 @@
-import { GUI } from 'three/addons/libs/lil-gui.module.min.js'
+import GUI from 'lil-gui';
+import { AmbientLight, DirectionalLight, DirectionalLightHelper, CameraHelper } from 'three';
+import { SunPath, SunPathParams } from './SunPath';
+import { SkyControl } from './DynamicSky';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-function createGUI(params, ambientLight, sunLight, sunHelper, shadowCameraHelper, sunPath, controls, skyControl, cameraControl) {
+interface CameraControl {
+  firstPerson: () => void;
+  birdView: () => void;
+}
+
+function createGUI(
+  params: SunPathParams,
+  ambientLight: AmbientLight,
+  sunLight: DirectionalLight,
+  sunHelper: DirectionalLightHelper,
+  shadowCameraHelper: CameraHelper,
+  sunPath: SunPath,
+  controls: OrbitControls,
+  skyControl: SkyControl,
+  cameraControl: CameraControl
+) {
   const gui = new GUI()
   gui.close()
 

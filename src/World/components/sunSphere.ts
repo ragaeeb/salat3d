@@ -1,6 +1,6 @@
 import { Mesh, MeshBasicMaterial, SphereGeometry } from "three"
 
-function createSunSphere() {
+function createSunSphere(): Mesh {
   const sunSphere = new Mesh(
     new SphereGeometry(),
     new MeshBasicMaterial({ color: 'yellow' })
