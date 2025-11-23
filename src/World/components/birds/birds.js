@@ -1,5 +1,5 @@
 import { AnimationMixer, Group } from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 
 async function loadBirds() {
   const gltfLoader = new GLTFLoader()
@@ -15,10 +15,10 @@ async function loadBirds() {
     if (n.isMesh) {
       n.castShadow = true
       n.receiveShadow = true
-      }
+    }
   })
   parrot.scale.multiplyScalar(0.03)
-  parrot.position.set(-10,10,12)
+  parrot.position.set(-10, 10, 12)
   const parrot2 = parrot.clone()
   parrot2.scale.multiplyScalar(.9)
   parrot2.position.set(-12, 10, 10)
@@ -40,7 +40,7 @@ async function loadBirds() {
   araras.add(parrot, parrot2, parrot3)
   araras.position.set(-100, 3, -100)
   araras.rotation.y = Math.PI / 6
-  
+
   return araras
 }
 

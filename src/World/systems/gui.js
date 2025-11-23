@@ -1,15 +1,15 @@
-import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js'
+import { GUI } from 'three/addons/libs/lil-gui.module.min.js'
 
 function createGUI(params, ambientLight, sunLight, sunHelper, shadowCameraHelper, sunPath, controls, skyControl, cameraControl) {
   const gui = new GUI()
   gui.close()
 
   const skyFolder = gui.addFolder('Sky')
-  skyFolder.add( skyControl, 'turbidity', 0.0, 20.0, 0.1 )
-  skyFolder.add( skyControl, 'rayleigh', 0.0, 4, 0.001 )
-  skyFolder.add( skyControl, 'mieCoefficient', 0.0, 0.1, 0.001 )
-  skyFolder.add( skyControl, 'mieDirectionalG', 0.0, 1, 0.001 )
-  skyFolder.add( skyControl, 'exposure', 0, 10, 0.001 )
+  skyFolder.add(skyControl, 'turbidity', 0.0, 20.0, 0.1)
+  skyFolder.add(skyControl, 'rayleigh', 0.0, 4, 0.001)
+  skyFolder.add(skyControl, 'mieCoefficient', 0.0, 0.1, 0.001)
+  skyFolder.add(skyControl, 'mieDirectionalG', 0.0, 1, 0.001)
+  skyFolder.add(skyControl, 'exposure', 0, 10, 0.001)
   skyFolder.close()
 
   const lightFolder = gui.addFolder('Light')
@@ -47,8 +47,8 @@ function createGUI(params, ambientLight, sunLight, sunHelper, shadowCameraHelper
   sunsurfaceFolder.add(params, 'showSunSurface').onChange(() => sunPath.updateLocation())
   sunsurfaceFolder.add(params, 'showAnalemmas').onChange(() => sunPath.updateLocation())
   sunsurfaceFolder.add(params, 'showSunDayPath').onChange(() => sunPath.updateLocation())
-  sunsurfaceFolder.add(sunPath.sunPathLight.children[0].children[0], 'visible', ).name('Sun Sphere')
-  sunsurfaceFolder.add(sunPath.sunPathLight.children[1], 'visible', ).name('Orientation')
+  sunsurfaceFolder.add(sunPath.sunPathLight.children[0].children[0], 'visible',).name('Sun Sphere')
+  sunsurfaceFolder.add(sunPath.sunPathLight.children[1], 'visible',).name('Orientation')
   sunsurfaceFolder.close()
 
   // skyFolder.hide()

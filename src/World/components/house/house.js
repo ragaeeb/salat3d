@@ -1,6 +1,6 @@
 import { Box3, Vector3 } from 'three'
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import { setupModel } from './setupModel'
 
 async function loadHouse() {

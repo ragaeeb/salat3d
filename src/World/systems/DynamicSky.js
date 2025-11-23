@@ -1,5 +1,5 @@
 import { Vector3 } from 'three'
-import { Sky } from 'three/examples/jsm/objects/Sky'
+import { Sky } from 'three/addons/objects/Sky.js'
 
 class DynamicSky {
   constructor(skyControl, sphereLight, renderer) {
@@ -17,10 +17,10 @@ class DynamicSky {
       this.sphereLight.children[1].visible = true
     }
     const uniforms = this.sky.material.uniforms
-    uniforms[ 'turbidity' ].value = this.skyControl.turbidity;
-    uniforms[ 'rayleigh' ].value = this.skyControl.rayleigh;
-    uniforms[ 'mieCoefficient' ].value = this.skyControl.mieCoefficient;
-    uniforms[ 'mieDirectionalG' ].value = this.skyControl.mieDirectionalG;
+    uniforms['turbidity'].value = this.skyControl.turbidity;
+    uniforms['rayleigh'].value = this.skyControl.rayleigh;
+    uniforms['mieCoefficient'].value = this.skyControl.mieCoefficient;
+    uniforms['mieDirectionalG'].value = this.skyControl.mieDirectionalG;
     uniforms['sunPosition'].value.copy(sunPosition)
     this.renderer.toneMappingExposure = this.skyControl.exposure
     // console.log(this.sphereLight.position)
