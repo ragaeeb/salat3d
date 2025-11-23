@@ -32,8 +32,7 @@ class World {
   private loop: Loop;
   private controls: OrbitControls & { tick: (delta: number) => void };
   private resizer: Resizer;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   private gui: GUI;
   private tl: gsap.core.Timeline;
 
@@ -47,8 +46,6 @@ class World {
     this.loop = new Loop(this.activeCamera, this.scene, this.renderer)
     container.append(this.renderer.domElement)
     this.controls = createControls(this.activeCamera, this.renderer.domElement)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     this.controls.tick = (_delta: number) => this.controls.update();
 
     const params: SunPathParams = {
@@ -119,7 +116,7 @@ class World {
     }
 
     this.gui = createGUI(params, ambientLight, sunLight, sunHelper, sunShadowHelper, sunPath, this.controls, skyControl, cameraControl)
-    this.resizer = new Resizer(container, this.activeCamera, this.renderer)
+    this.resizer = new Resizer(container, this.activeCamera, this.renderer);
 
     this.tl = gsap.timeline({ repeat: -1 })
   }
@@ -147,6 +144,10 @@ class World {
         }
       }
     });
+
+    if (this.gui) {
+      // doing this purely to satisfy TS
+    }
   }
 
   start() {
