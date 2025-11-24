@@ -1,202 +1,159 @@
-import { Octree } from 'three/examples/jsm/math/Octree.js'
-import { Capsule } from 'three/examples/jsm/math/Capsule.js'
-import { Vector3, Camera, Object3D } from 'three'
+import { type Camera, type Object3D, Vector3 } from 'three';
+import { Capsule } from 'three/examples/jsm/math/Capsule.js';
+import { Octree } from 'three/examples/jsm/math/Octree.js';
 
 function createPlayer(camera: Camera, geometry: Object3D) {
-  const GRAVITY = 30;
-  const STEPS_PER_FRAME = 5;
+    const GRAVITY = 30;
+    const STEPS_PER_FRAME = 5;
 
-  const worldOctree = new Octree();
-  const playerCollider = new Capsule(new Vector3(0, 1.35, 15), new Vector3(0, 2.8, 15), 0.25) as Capsule & { tick: (delta: number) => void };
+    const worldOctree = new Octree();
+    const playerCollider = new Capsule(new Vector3(0, 1.35, 15), new Vector3(0, 2.8, 15), 0.25) as Capsule & {
+        tick: (delta: number) => void;
+    };
 
-  const playerVelocity = new Vector3();
-  const playerDirection = new Vector3();
+    const playerVelocity = new Vector3();
+    const playerDirection = new Vector3();
 
-  let playerOnFloor = false;
-  // let mouseTime = 0;
+    let playerOnFloor = false;
+    // let mouseTime = 0;
 
-  const keyStates: Record<string, boolean> = {};
+    const keyStates: Record<string, boolean> = {};
 
-  document.addEventListener('keydown', (event) => {
+    document.addEventListener('keydown', (event) => {
+        keyStates[event.code] = true;
+    });
 
-    keyStates[event.code] = true;
+    document.addEventListener('keyup', (event) => {
+        keyStates[event.code] = false;
+    });
 
-  });
+    document.addEventListener('mousedown', () => {
+        // document.body.requestPointerLock();
+        // mouseTime = performance.now();
+    });
 
-  document.addEventListener('keyup', (event) => {
+    // document.addEventListener( 'mouseup', () => {
 
-    keyStates[event.code] = false;
+    // 	throwBall();
 
-  });
+    // } );
 
-  document.addEventListener('mousedown', () => {
+    document.body.addEventListener('mousemove', (event) => {
+        if (document.pointerLockElement === document.body) {
+            camera.rotation.y -= event.movementX / 500;
+            camera.rotation.x -= event.movementY / 500;
+        }
+    });
 
-    // document.body.requestPointerLock();
+    function playerCollisions() {
+        const result = worldOctree.capsuleIntersect(playerCollider);
 
-    // mouseTime = performance.now();
+        playerOnFloor = false;
 
-  });
+        if (result) {
+            playerOnFloor = result.normal.y > 0;
 
-  // document.addEventListener( 'mouseup', () => {
+            if (!playerOnFloor) {
+                playerVelocity.addScaledVector(result.normal, -result.normal.dot(playerVelocity));
+            }
 
-  // 	throwBall();
-
-  // } );
-
-  document.body.addEventListener('mousemove', (event) => {
-
-    if (document.pointerLockElement === document.body) {
-
-      camera.rotation.y -= event.movementX / 500;
-      camera.rotation.x -= event.movementY / 500;
-
+            playerCollider.translate(result.normal.multiplyScalar(result.depth));
+        }
     }
 
-  });
+    function updatePlayer(deltaTime: number) {
+        let damping = Math.exp(-4 * deltaTime) - 1;
 
-  function playerCollisions() {
+        if (!playerOnFloor) {
+            playerVelocity.y -= GRAVITY * deltaTime;
 
-    const result = worldOctree.capsuleIntersect(playerCollider);
+            // small air resistance
+            damping *= 0.1;
+        }
 
-    playerOnFloor = false;
+        playerVelocity.addScaledVector(playerVelocity, damping);
 
-    if (result) {
+        const deltaPosition = playerVelocity.clone().multiplyScalar(deltaTime);
+        playerCollider.translate(deltaPosition);
 
-      playerOnFloor = result.normal.y > 0;
+        playerCollisions();
 
-      if (!playerOnFloor) {
-
-        playerVelocity.addScaledVector(result.normal, - result.normal.dot(playerVelocity));
-
-      }
-
-      playerCollider.translate(result.normal.multiplyScalar(result.depth));
-
+        camera.position.copy(playerCollider.end);
     }
 
-  }
+    function getForwardVector() {
+        camera.getWorldDirection(playerDirection);
+        playerDirection.y = 0;
+        playerDirection.normalize();
 
-  function updatePlayer(deltaTime: number) {
-
-    let damping = Math.exp(- 4 * deltaTime) - 1;
-
-    if (!playerOnFloor) {
-
-      playerVelocity.y -= GRAVITY * deltaTime;
-
-      // small air resistance
-      damping *= 0.1;
-
+        return playerDirection;
     }
 
-    playerVelocity.addScaledVector(playerVelocity, damping);
+    function getSideVector() {
+        camera.getWorldDirection(playerDirection);
+        playerDirection.y = 0;
+        playerDirection.normalize();
+        playerDirection.cross(camera.up);
 
-    const deltaPosition = playerVelocity.clone().multiplyScalar(deltaTime);
-    playerCollider.translate(deltaPosition);
-
-    playerCollisions();
-
-    camera.position.copy(playerCollider.end);
-
-  }
-
-  function getForwardVector() {
-
-    camera.getWorldDirection(playerDirection);
-    playerDirection.y = 0;
-    playerDirection.normalize();
-
-    return playerDirection;
-
-  }
-
-  function getSideVector() {
-
-    camera.getWorldDirection(playerDirection);
-    playerDirection.y = 0;
-    playerDirection.normalize();
-    playerDirection.cross(camera.up);
-
-    return playerDirection;
-
-  }
-
-  function controls(deltaTime: number) {
-
-    // gives a bit of air control
-    const speedDelta = deltaTime * (playerOnFloor ? 25 : 8);
-
-    if (keyStates['KeyW']) {
-
-      playerVelocity.add(getForwardVector().multiplyScalar(speedDelta));
-      document.body.requestPointerLock();
+        return playerDirection;
     }
 
-    if (keyStates['KeyS']) {
+    function controls(deltaTime: number) {
+        // gives a bit of air control
+        const speedDelta = deltaTime * (playerOnFloor ? 25 : 8);
 
-      playerVelocity.add(getForwardVector().multiplyScalar(- speedDelta));
-      document.body.requestPointerLock();
+        if (keyStates['KeyW']) {
+            playerVelocity.add(getForwardVector().multiplyScalar(speedDelta));
+            document.body.requestPointerLock();
+        }
 
+        if (keyStates['KeyS']) {
+            playerVelocity.add(getForwardVector().multiplyScalar(-speedDelta));
+            document.body.requestPointerLock();
+        }
+
+        if (keyStates['KeyA']) {
+            playerVelocity.add(getSideVector().multiplyScalar(-speedDelta));
+            document.body.requestPointerLock();
+        }
+
+        if (keyStates['KeyD']) {
+            playerVelocity.add(getSideVector().multiplyScalar(speedDelta));
+            document.body.requestPointerLock();
+        }
+
+        if (playerOnFloor) {
+            if (keyStates['Space']) {
+                playerVelocity.y = 15;
+            }
+        }
+    }
+    worldOctree.fromGraphNode(geometry);
+
+    function teleportPlayerIfOob() {
+        if (camera.position.y <= -25) {
+            playerCollider.start.set(0, 1.35, 15);
+            playerCollider.end.set(0, 2.8, 15);
+            playerCollider.radius = 0.35;
+            camera.position.copy(playerCollider.end);
+            camera.rotation.set(0, 0, 0);
+        }
     }
 
-    if (keyStates['KeyA']) {
+    playerCollider.tick = (delta) => {
+        for (let i = 0; i < STEPS_PER_FRAME; i++) {
+            const deltaTime = Math.min(0.05, delta) / STEPS_PER_FRAME;
+            controls(deltaTime);
 
-      playerVelocity.add(getSideVector().multiplyScalar(- speedDelta));
-      document.body.requestPointerLock();
+            updatePlayer(deltaTime);
 
-    }
+            // updateSpheres( deltaTime );
 
-    if (keyStates['KeyD']) {
+            teleportPlayerIfOob();
+        }
+    };
 
-      playerVelocity.add(getSideVector().multiplyScalar(speedDelta));
-      document.body.requestPointerLock();
-
-    }
-
-    if (playerOnFloor) {
-
-      if (keyStates['Space']) {
-
-        playerVelocity.y = 15;
-
-      }
-
-    }
-
-  }
-  worldOctree.fromGraphNode(geometry)
-
-  function teleportPlayerIfOob() {
-
-    if (camera.position.y <= - 25) {
-
-      playerCollider.start.set(0, 1.35, 15);
-      playerCollider.end.set(0, 2.8, 15);
-      playerCollider.radius = 0.35;
-      camera.position.copy(playerCollider.end);
-      camera.rotation.set(0, 0, 0);
-
-    }
-
-  }
-
-  playerCollider.tick = (delta) => {
-    for (let i = 0; i < STEPS_PER_FRAME; i++) {
-      const deltaTime = Math.min(0.05, delta) / STEPS_PER_FRAME
-      controls(deltaTime);
-
-      updatePlayer(deltaTime);
-
-      // updateSpheres( deltaTime );
-
-      teleportPlayerIfOob();
-
-    }
-
-  }
-
-  return playerCollider
-
+    return playerCollider;
 }
 
-export { createPlayer }
+export { createPlayer };
