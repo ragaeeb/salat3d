@@ -14,8 +14,8 @@ body {
   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
   font-weight: bold;
   position: absolute;
-  right: 0px;
-  bottom: 0px;
+  top: 0px;
+  left: 0px;
   padding: 20px;
   font-size: 2rem;
   color: white;

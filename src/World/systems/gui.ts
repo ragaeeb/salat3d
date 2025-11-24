@@ -70,6 +70,11 @@ function createGUI(
   sunsurfaceFolder.add(sunPath.sunPathLight.children[1], 'visible',).name('Orientation')
   sunsurfaceFolder.close()
 
+  const prayerFolder = gui.addFolder('Prayer Settings')
+  prayerFolder.add(params, 'fajrAngle', 10, 20, 0.1).name('Fajr Twilight Angle').onChange(() => sunPath.updatePrayerInfo())
+  prayerFolder.add(params, 'ishaAngle', 10, 20, 0.1).name('Isha Twilight Angle').onChange(() => sunPath.updatePrayerInfo())
+  prayerFolder.close()
+
   // skyFolder.hide()
   // lightFolder.hide()
   // locationFolder.hide()

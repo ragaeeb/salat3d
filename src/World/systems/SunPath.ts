@@ -1,5 +1,6 @@
 import { getPosition } from 'suncalc'
 import { BufferGeometry, DoubleSide, Float32BufferAttribute, Group, LineBasicMaterial, LineDashedMaterial, LineLoop, MathUtils, Mesh, MeshBasicMaterial, DirectionalLight, Object3D } from 'three'
+import { PrayerTimes, Coordinates, CalculationParameters, Prayer } from 'adhan'
 
 export interface SunPathParams {
   hour: number;
@@ -17,12 +18,15 @@ export interface SunPathParams {
   timeSpeed: number;
   shadowBias: number;
   baseY: number;
+  fajrAngle: number;
+  ishaAngle: number;
 }
 
 class SunPath {
   params: SunPathParams;
   date: number;
   timeText: Element | null;
+  prayerText: Element | null;
   sunLight: DirectionalLight;
   sunPathLight: Group;
   sphereLight: Group;
@@ -32,7 +36,8 @@ class SunPath {
     // this.date = new Date('2022-01-01T07:00:00').getTime() // Overwritten immediately
     this.date = new Date().setHours(params.hour)
     this.date = new Date(this.date).setMonth(params.month - 1)
-    this.timeText = document.querySelector('.time')
+    this.timeText = document.querySelector('#time-display')
+    this.prayerText = document.querySelector('#prayer-display')
     this.sunLight = sunLight
     this.sunPathLight = new Group()
     this.sphereLight = new Group()
@@ -43,6 +48,35 @@ class SunPath {
     this.drawAnalemmas()
     this.updateSunPosition()
     this.updateNorth()
+    this.updatePrayerInfo()
+  }
+
+  updatePrayerInfo() {
+    if (!this.timeText || !this.prayerText) return;
+
+    const date = new Date(this.date);
+    const coordinates = new Coordinates(this.params.latitude, this.params.longitude);
+    const params = new CalculationParameters('Other', this.params.fajrAngle, this.params.ishaAngle);
+    const prayerTimes = new PrayerTimes(coordinates, date, params);
+
+    const currentPrayer = prayerTimes.currentPrayer(date);
+
+
+    let prayerName = '';
+    if (currentPrayer === Prayer.None) {
+      prayerName = 'Waiting for Fajr';
+    } else {
+      prayerName = currentPrayer;
+    }
+
+    // Format time
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+
+    this.timeText.textContent = `${hours}:${minutes} - ${day}/${month}`;
+    this.prayerText.textContent = `Current: ${prayerName}`;
   }
 
   getSunPosition(date: number | Date) {
@@ -137,7 +171,9 @@ class SunPath {
     this.date = new Date(this.date).setHours(this.params.hour)
     this.date = new Date(this.date).setMinutes(this.params.minute)
     this.updateSunPosition()
+    this.updatePrayerInfo()
   }
+
 
   updateMonth() {
     this.date = new Date(this.date).setHours(this.params.hour)
@@ -145,7 +181,9 @@ class SunPath {
     this.date = new Date(this.date).setMonth(this.params.month - 1)
     this.updateSunPosition()
     this.drawSunDayPath()
+    this.updatePrayerInfo()
   }
+
 
   updateNorth() {
     this.sunPathLight.rotation.y = MathUtils.degToRad(this.params.northOffset)
@@ -156,7 +194,9 @@ class SunPath {
     this.drawSunSurface()
     this.drawAnalemmas()
     this.updateSunPosition()
+    this.updatePrayerInfo()
   }
+
 
   updateSunPosition() {
     let sunPosition = this.getSunPosition(this.date)
@@ -202,6 +242,7 @@ class SunPath {
       this.params.month = new Date(this.date).getMonth()
       this.updateSunPosition()
       this.drawSunDayPath()
+      this.updatePrayerInfo()
     }
   }
 }
