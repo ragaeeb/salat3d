@@ -4,6 +4,9 @@ A 3D interactive sun position and Islamic prayer times visualization app built w
 
 ![Salat3D Preview](https://user-images.githubusercontent.com/35701560/224489732-e5b23b52-6c41-4703-95bc-28ab044b13dd.png)
 [![wakatime](https://wakatime.com/badge/user/a0b906ce-b8e7-4463-8bce-383238df6d4b/project/b16388d4-0199-4c4f-8196-0710fe34f2b4.svg)](https://wakatime.com/badge/user/a0b906ce-b8e7-4463-8bce-383238df6d4b/project/b16388d4-0199-4c4f-8196-0710fe34f2b4)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/b289b5bb-c66d-457b-8ce0-3a04fe4fad7d/deploy-status)](https://app.netlify.com/projects/salat3d/deploys)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6)](https://www.typescriptlang.org/)
+![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=for-the-badge&logo=bun&logoColor=white)
 
 ## Features
 
