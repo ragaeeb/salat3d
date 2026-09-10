@@ -36,6 +36,10 @@ function createSunPath(overrides: Partial<SunPathParams> = {}) {
 }
 
 describe('SunPath', () => {
+    it('keeps the night sky off at noon', () => {
+        expect(createSunPath().nightPhase).toEqual({ comets: false, stars: false });
+    });
+
     it('places the noon sun above the horizon toward north in the southern hemisphere', () => {
         const sunPath = createSunPath();
         const position = sunPath.getSunPosition(new Date(2024, 5, 21, 12, 0, 0));

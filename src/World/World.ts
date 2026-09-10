@@ -15,6 +15,7 @@ import { createControls } from './systems/controls';
 import { DynamicSky, type SkyControl } from './systems/DynamicSky';
 import { createGUI } from './systems/gui';
 import { Loop } from './systems/Loop';
+import { NightSky } from './systems/NightSky';
 import { createPlayer } from './systems/player';
 import { Resizer } from './systems/Resizer';
 import { createRenderer } from './systems/renderer';
@@ -95,7 +96,8 @@ class World {
         // const axesHelper = createAxesHelper(30)
         sunShadowHelper.visible = false;
 
-        this.loop.updatables.push(base, this.controls, sunPath, sky);
+        const nightSky = new NightSky(sunPath);
+        this.loop.updatables.push(base, this.controls, sunPath, sky, nightSky);
 
         this.scene.add(sky.sky, ambientLight, sunHelper, sunShadowHelper, sunPath.sunPathLight, sunLight.target);
 
