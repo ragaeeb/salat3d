@@ -15,4 +15,4 @@ function createAxesHelper(size: number): AxesHelper {
     return axesHelper;
 }
 
-export { createDirectionalLightHelper, createShadowCameraHelper, createAxesHelper };
+export { createAxesHelper, createDirectionalLightHelper, createShadowCameraHelper };

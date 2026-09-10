@@ -1,5 +1,6 @@
-import { Vector3, WebGLRenderer, Object3D } from 'three';
-import { Sky } from 'three/examples/jsm/objects/Sky.js';
+import { type Object3D, Vector3, type WebGLRenderer } from 'three';
+// r182 Sky: r183+ dropped the gamma curve and cannot match the previous daylight look.
+import { Sky } from './Sky.js';
 
 export interface SkyControl {
     turbidity: number;
@@ -23,7 +24,7 @@ class DynamicSky {
         this.sky.scale.setScalar(450000);
     }
     tick() {
-        let sunPosition = new Vector3().setFromMatrixPosition(this.sphereLight.matrixWorld);
+        const sunPosition = new Vector3().setFromMatrixPosition(this.sphereLight.matrixWorld);
         if (sunPosition.y < 0) {
             this.sphereLight.children[1].visible = false;
         } else {

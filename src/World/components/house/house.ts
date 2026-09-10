@@ -1,4 +1,4 @@
-import { Box3, Vector3, Mesh } from 'three';
+import { Box3, type Mesh, Vector3 } from 'three';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { setupModel } from './setupModel';

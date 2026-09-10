@@ -1,8 +1,8 @@
 import GUI from 'lil-gui';
-import { AmbientLight, DirectionalLight, DirectionalLightHelper, CameraHelper } from 'three';
-import { SunPath, SunPathParams } from './SunPath';
-import { SkyControl } from './DynamicSky';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import type { AmbientLight, CameraHelper, DirectionalLight, DirectionalLightHelper } from 'three';
+import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import type { SkyControl } from './DynamicSky';
+import type { SunPath, SunPathParams } from './SunPath';
 
 interface CameraControl {
     firstPerson: () => void;
@@ -41,8 +41,14 @@ function createGUI(
     lightFolder.close();
 
     const locationFolder = gui.addFolder('Location');
-    locationFolder.add(params, 'latitude').onChange(() => sunPath.updateLocation());
-    locationFolder.add(params, 'longitude').onChange(() => sunPath.updateLocation());
+    locationFolder
+        .add(params, 'latitude')
+        .listen()
+        .onChange(() => sunPath.updateLocation());
+    locationFolder
+        .add(params, 'longitude')
+        .listen()
+        .onChange(() => sunPath.updateLocation());
     locationFolder.add(params, 'northOffset').onChange(() => sunPath.updateNorth());
     locationFolder.close();
 

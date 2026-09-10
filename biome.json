@@ -1,5 +1,5 @@
 {
-    "$schema": "https://biomejs.dev/schemas/latest/schema.json",
+    "$schema": "https://biomejs.dev/schemas/2.5.13/schema.json",
     "assist": {
         "actions": {
             "source": {
@@ -14,7 +14,7 @@
         }
     },
     "files": {
-        "includes": ["**", "!!**/dist"]
+        "includes": ["**", "!!**/dist", "!!**/public", "!!**/src/World/systems/Sky.js"]
     },
     "formatter": {
         "enabled": true,
@@ -42,7 +42,7 @@
                 "noExcessiveCognitiveComplexity": "warn",
                 "useWhile": "error"
             },
-            "recommended": true,
+            "preset": "recommended",
             "style": {
                 "noNonNullAssertion": "off",
                 "useBlockStatements": {

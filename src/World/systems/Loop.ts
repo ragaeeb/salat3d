@@ -1,16 +1,15 @@
-import { Clock, Camera, Scene, WebGLRenderer } from 'three';
+import { type Camera, type Scene, Timer, type WebGLRenderer } from 'three';
 
 interface Updatable {
     tick(delta: number): void;
 }
-
-const clock = new Clock();
 
 class Loop {
     camera: Camera;
     scene: Scene;
     renderer: WebGLRenderer;
     updatables: Updatable[];
+    private timer = new Timer();
 
     constructor(camera: Camera, scene: Scene, renderer: WebGLRenderer) {
         this.camera = camera;
@@ -20,11 +19,9 @@ class Loop {
     }
 
     start() {
-        this.renderer.setAnimationLoop(() => {
-            // tell every animated object to tick forward one frame
-            this.tick();
-
-            // render a frame
+        this.timer.reset();
+        this.renderer.setAnimationLoop((time) => {
+            this.tick(time);
             this.renderer.render(this.scene, this.camera);
         });
     }
@@ -33,13 +30,9 @@ class Loop {
         this.renderer.setAnimationLoop(null);
     }
 
-    tick() {
-        // only call the getDelta function once per frame!
-        const delta = clock.getDelta();
-
-        // console.log(
-        //   `The last frame rendered in ${delta * 1000} milliseconds`,
-        // );
+    tick(timestamp?: number) {
+        this.timer.update(timestamp);
+        const delta = this.timer.getDelta();
 
         for (const object of this.updatables) {
             object.tick(delta);

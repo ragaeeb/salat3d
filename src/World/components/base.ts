@@ -1,14 +1,14 @@
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import {
     BufferGeometry,
-    Float32BufferAttribute,
     CylinderGeometry,
+    Float32BufferAttribute,
     Mesh,
-    MeshStandardMaterial,
     MeshBasicMaterial,
+    MeshStandardMaterial,
 } from 'three';
-import { SunPathParams } from '../systems/SunPath';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+import type { SunPathParams } from '../systems/SunPath';
 
 function createBase(params: SunPathParams) {
     // Cylinder base
@@ -20,14 +20,14 @@ function createBase(params: SunPathParams) {
     // Direction labels
     const fontLoader = new FontLoader();
 
-    fontLoader.load('fonts/droid_sans_bold.typeface.json', function (font) {
+    fontLoader.load('fonts/droid_sans_bold.typeface.json', (font) => {
         const fontMaterial = new MeshBasicMaterial({
             color: 'black',
         });
         let textGeometry = new TextGeometry('N', {
+            depth: 0.3,
             font: font,
             size: 3,
-            depth: 0.3,
         });
         let text = new Mesh(textGeometry, fontMaterial);
         text.rotation.x = -Math.PI / 2;
@@ -38,7 +38,7 @@ function createBase(params: SunPathParams) {
             text.position.z = -(textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y) / 2;
         }
         base.add(text);
-        textGeometry = new TextGeometry('S', { font, size: 3, depth: 0.3 });
+        textGeometry = new TextGeometry('S', { depth: 0.3, font, size: 3 });
         text = new Mesh(textGeometry, fontMaterial);
         text.position.x = params.radius + 4;
         text.rotation.x = -Math.PI / 2;
@@ -48,7 +48,7 @@ function createBase(params: SunPathParams) {
             text.position.z = -(textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y) / 2;
         }
         base.add(text);
-        textGeometry = new TextGeometry('L', { font, size: 3, depth: 0.3 });
+        textGeometry = new TextGeometry('L', { depth: 0.3, font, size: 3 });
         text = new Mesh(textGeometry, fontMaterial);
         text.position.z = -params.radius - 6;
         text.rotation.x = -Math.PI / 2;
@@ -58,7 +58,7 @@ function createBase(params: SunPathParams) {
         }
         // text.rotation.z = - Math.PI/2
         base.add(text);
-        textGeometry = new TextGeometry('O', { font, size: 3, depth: 0.3 });
+        textGeometry = new TextGeometry('O', { depth: 0.3, font, size: 3 });
         text = new Mesh(textGeometry, fontMaterial);
         text.position.z = params.radius + 8;
         text.rotation.x = -Math.PI / 2;

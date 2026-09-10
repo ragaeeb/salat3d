@@ -5,7 +5,6 @@
         "allowUnreachableCode": false,
         "allowUnusedLabels": false,
         "alwaysStrict": true,
-        "downlevelIteration": false,
         "esModuleInterop": true,
         "exactOptionalPropertyTypes": false,
         "forceConsistentCasingInFileNames": true,
@@ -43,5 +42,6 @@
         "useUnknownInCatchVariables": true,
         "verbatimModuleSyntax": false
     },
+    "exclude": ["**/*.test.ts"],
     "include": ["src"]
 }

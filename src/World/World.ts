@@ -65,7 +65,7 @@ class World {
             showAnalemmas: true,
             showSunDayPath: true,
             showSunSurface: true,
-            timeSpeed: 100,
+            timeSpeed: 1,
         };
 
         const skyControl: SkyControl = {
@@ -97,7 +97,13 @@ class World {
 
         this.loop.updatables.push(base, this.controls, sunPath, sky);
 
-        this.scene.add(sky.sky, ambientLight, sunHelper, sunShadowHelper, sunPath.sunPathLight);
+        this.scene.add(sky.sky, ambientLight, sunHelper, sunShadowHelper, sunPath.sunPathLight, sunLight.target);
+
+        navigator.geolocation?.getCurrentPosition(({ coords }) => {
+            params.latitude = coords.latitude;
+            params.longitude = coords.longitude;
+            sunPath.updateLocation();
+        });
 
         const cameraControl = {
             birdView: () => {
@@ -133,7 +139,7 @@ class World {
     async init() {
         const { house } = await loadHouse();
         const birds = await loadBirds();
-        for (var b = 0; b < birds.children.length; b++) {
+        for (let b = 0; b < birds.children.length; b++) {
             // Cast to any because birds children might not implement Updatable interface strictly in Three types, but we added tick
             this.loop.updatables.push(birds.children[b] as any);
         }
