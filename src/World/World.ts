@@ -176,7 +176,17 @@ class World {
         this.tl.to(birds.position, { delay: 1, duration: 60, x: 100, z: 120 });
         const decorations = [...this.ground.children];
         this.ground.remove(...decorations);
-        const player = createPlayer(this.firstPersonCamera, house, this.ground, library, masjid);
+        const garden = this.sunPath.sunPathLight.getObjectByName('garden');
+        const player = createPlayer(
+            this.firstPersonCamera,
+            house,
+            this.ground,
+            library,
+            masjid,
+            garden?.getObjectByName('gardenColliders'),
+            garden?.getObjectByName('fountain'),
+            garden?.getObjectByName('picnic'),
+        );
         this.ground.add(...decorations);
         const reader = createBookReader({
             camera: this.firstPersonCamera,

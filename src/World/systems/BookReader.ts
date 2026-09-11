@@ -38,6 +38,20 @@ function specOf(mesh: Mesh) {
     return mesh.userData.read as ReadSpec | undefined;
 }
 
+async function loadMarkdown(key: string, cache: Map<string, string>) {
+    const cached = cache.get(key);
+    if (cached) {
+        return cached;
+    }
+    const response = await fetch(`/${key}`);
+    if (!response.ok) {
+        throw new Error(String(response.status));
+    }
+    const markdown = await response.text();
+    cache.set(key, markdown);
+    return markdown;
+}
+
 function createBookReader({ camera, isActive, items, sunPath }: BookReaderOptions) {
     const prompt = document.querySelector('#interact-prompt');
     const overlay = document.querySelector('#book-reader');
@@ -47,7 +61,9 @@ function createBookReader({ camera, isActive, items, sunPath }: BookReaderOption
     const center = new Vector2(0, 0);
     const world = new Vector3();
     const cache = new Map<string, string>();
+    const failed = new Set<string>();
     let focused: Mesh | null = null;
+    let opening = false;
 
     const visibleItems = () => items.filter((mesh) => mesh.visible);
 
@@ -85,21 +101,28 @@ function createBookReader({ camera, isActive, items, sunPath }: BookReaderOption
         if (!spec || !(body instanceof HTMLElement) || !(overlay instanceof HTMLElement)) {
             return;
         }
-        if (spec.folder === 'scrolls') {
-            mesh.visible = false;
-        }
         const key = `${spec.folder}/${spec.file}`;
-        let markdown = cache.get(key);
-        if (!markdown) {
-            markdown = await (await fetch(`/${key}`)).text();
-            cache.set(key, markdown);
+        if (failed.has(key) || opening) {
+            return;
         }
-        const filled = spec.folder === 'books' && spec.id ? applyTokens(markdown, tokens(sunPath, spec.id)) : markdown;
-        body.innerHTML = markdownToHtml(filled);
-        overlay.hidden = false;
-        bookOpen = true;
-        document.exitPointerLock();
-        hidePrompt();
+        opening = true;
+        try {
+            const markdown = await loadMarkdown(key, cache);
+            const filled =
+                spec.folder === 'books' && spec.id ? applyTokens(markdown, tokens(sunPath, spec.id)) : markdown;
+            body.innerHTML = markdownToHtml(filled);
+            if (spec.folder === 'scrolls') {
+                mesh.visible = false;
+            }
+            overlay.hidden = false;
+            bookOpen = true;
+            document.exitPointerLock();
+            hidePrompt();
+        } catch {
+            failed.add(key);
+        } finally {
+            opening = false;
+        }
     };
 
     close?.addEventListener('click', closeBook);

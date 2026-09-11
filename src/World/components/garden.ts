@@ -7,6 +7,7 @@ import {
     Group,
     IcosahedronGeometry,
     InstancedMesh,
+    type Matrix4,
     Mesh,
     MeshPhysicalMaterial,
     MeshStandardMaterial,
@@ -47,9 +48,19 @@ function speckledTexture(hue: number, sat: number, lite: number, specks: number)
     return texture;
 }
 
+function hitMesh(geometry: Mesh['geometry'], matrix: Matrix4) {
+    const mesh = new Mesh(geometry);
+    mesh.matrixAutoUpdate = false;
+    mesh.matrix.copy(matrix);
+    mesh.visible = false;
+    return mesh;
+}
+
 function createGarden() {
     const garden = new Group();
     garden.name = 'garden';
+    const colliders = new Group();
+    colliders.name = 'gardenColliders';
     const dummy = new Object3D();
     const leafTint = new Color();
 
@@ -96,6 +107,7 @@ function createGarden() {
         dummy.scale.setScalar(scale);
         dummy.updateMatrix();
         trunks.setMatrixAt(i, dummy.matrix);
+        colliders.add(hitMesh(trunks.geometry, dummy.matrix));
 
         dummy.position.y = 1 + 3.6 * scale;
         dummy.scale.set(scale, scale * 1.05, scale);
@@ -103,17 +115,20 @@ function createGarden() {
         pines.setMatrixAt(i, dummy.matrix);
         leafTint.setHSL(0.27 + hash(i + 13) * 0.07, 0.42, 0.28 + hash(i + 14) * 0.12);
         pines.setColorAt(i, leafTint);
+        const pineHit = i % 2 === 0 ? hitMesh(pines.geometry, dummy.matrix) : null;
 
         dummy.position.y = 1 + 4.2 * scale;
         dummy.scale.set(scale * 1.15, scale * 0.7, scale * 1.15);
         dummy.updateMatrix();
         crowns.setMatrixAt(i, dummy.matrix);
         crowns.setColorAt(i, leafTint);
-        if (i % 2 === 0) {
+        if (pineHit) {
+            colliders.add(pineHit);
             dummy.scale.setScalar(0.001);
             dummy.updateMatrix();
             crowns.setMatrixAt(i, dummy.matrix);
         } else {
+            colliders.add(hitMesh(crowns.geometry, dummy.matrix));
             dummy.scale.setScalar(0.001);
             dummy.updateMatrix();
             pines.setMatrixAt(i, dummy.matrix);
@@ -144,6 +159,7 @@ function createGarden() {
         dummy.scale.set(scale, scale * (0.5 + hash(i + 26) * 0.45), scale * (0.65 + hash(i + 27) * 0.4));
         dummy.updateMatrix();
         rocks.setMatrixAt(i, dummy.matrix);
+        colliders.add(hitMesh(rocks.geometry, dummy.matrix));
     }
 
     const fountain = new Group();
@@ -166,9 +182,10 @@ function createGarden() {
     basin.castShadow = spout.castShadow = true;
     basin.receiveShadow = water.receiveShadow = true;
     fountain.add(basin, water, spout);
+    fountain.name = 'fountain';
     fountain.position.set(22, 0, 16);
 
-    garden.add(path, trunks, pines, crowns, rocks, fountain, createPicnic());
+    garden.add(path, trunks, pines, crowns, rocks, fountain, createPicnic(), colliders);
     return garden;
 }
 

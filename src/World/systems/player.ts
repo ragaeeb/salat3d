@@ -3,7 +3,7 @@ import { Capsule } from 'three/examples/jsm/math/Capsule.js';
 import { Octree } from 'three/examples/jsm/math/Octree.js';
 import { isBookOpen } from './BookReader';
 
-function createPlayer(camera: Camera, ...colliders: Object3D[]) {
+function createPlayer(camera: Camera, ...colliders: (Object3D | undefined)[]) {
     const GRAVITY = 30;
     const STEPS_PER_FRAME = 5;
 
@@ -130,7 +130,9 @@ function createPlayer(camera: Camera, ...colliders: Object3D[]) {
         }
     }
     for (const collider of colliders) {
-        worldOctree.fromGraphNode(collider);
+        if (collider) {
+            worldOctree.fromGraphNode(collider);
+        }
     }
 
     function teleportPlayerIfOob() {
