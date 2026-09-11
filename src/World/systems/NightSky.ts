@@ -1,14 +1,17 @@
 import { CalculationParameters, Coordinates, PrayerTimes, SunnahTimes } from 'adhan';
+import { getMoonPosition } from 'suncalc';
 import {
     AdditiveBlending,
     BufferGeometry,
     CylinderGeometry,
     Float32BufferAttribute,
     Group,
+    MathUtils,
     Mesh,
     MeshBasicMaterial,
     Points,
     PointsMaterial,
+    SphereGeometry,
     Vector3,
 } from 'three';
 import type { SunPath } from './SunPath';
@@ -20,6 +23,44 @@ export type NightSkyPhase = {
 
 const STAR_COUNT = 1200;
 const STAR_RADIUS = 26;
+const MOON_RADIUS = 20;
+const MOON_PRE_MAGHRIB = 0.2;
+
+export function moonOpacityAt(
+    date: Date,
+    latitude: number,
+    longitude: number,
+    fajrAngle: number,
+    ishaAngle: number,
+): number {
+    const coordinates = new Coordinates(latitude, longitude);
+    const params = new CalculationParameters('Other', fajrAngle, ishaAngle);
+    const today = new PrayerTimes(coordinates, date, params);
+    const t = date.getTime();
+    let asr = today.asr.getTime();
+    let maghrib = today.maghrib.getTime();
+    let fajrEnd = today.fajr.getTime();
+    if (t < today.fajr.getTime()) {
+        const prev = new Date(date);
+        prev.setDate(prev.getDate() - 1);
+        const yesterday = new PrayerTimes(coordinates, prev, params);
+        asr = yesterday.asr.getTime();
+        maghrib = yesterday.maghrib.getTime();
+    } else {
+        const next = new Date(date);
+        next.setDate(next.getDate() + 1);
+        fajrEnd = new PrayerTimes(coordinates, next, params).fajr.getTime();
+    }
+    const orangeStart = (asr + maghrib) / 2;
+    const appearStart = orangeStart + (1 - MOON_PRE_MAGHRIB) * (maghrib - orangeStart);
+    if (t < appearStart || t >= fajrEnd) {
+        return 0;
+    }
+    if (t >= maghrib) {
+        return 1;
+    }
+    return (t - appearStart) / (maghrib - appearStart);
+}
 
 export function nightSkyPhase(
     date: Date,
@@ -72,6 +113,8 @@ type Streak = {
 class NightSky {
     group = new Group();
     private comets = new Group();
+    private moon: Mesh;
+    private moonGlow: Mesh;
     private scratch = new Vector3();
     private stars: Points;
     private streaks: Streak[];
@@ -106,7 +149,23 @@ class NightSky {
         this.streaks = [0, 1, 2].map(() => this.makeStreak());
         this.stars.visible = false;
         this.comets.visible = false;
-        this.group.add(this.stars, this.comets);
+        this.moon = new Mesh(
+            new SphereGeometry(2.2, 24, 20),
+            new MeshBasicMaterial({ color: 0xf6f3e8, toneMapped: false, transparent: true }),
+        );
+        this.moonGlow = new Mesh(
+            new SphereGeometry(3.5, 16, 16),
+            new MeshBasicMaterial({
+                color: 0xc5d0ee,
+                depthWrite: false,
+                opacity: 0,
+                toneMapped: false,
+                transparent: true,
+            }),
+        );
+        this.moon.add(this.moonGlow);
+        this.moon.visible = false;
+        this.group.add(this.stars, this.comets, this.moon);
         sunPath.sunPathLight.add(this.group);
     }
 
@@ -114,12 +173,33 @@ class NightSky {
         const { comets, stars } = this.sunPath.nightPhase;
         this.stars.visible = stars;
         this.comets.visible = comets;
+        this.updateMoon();
         if (!comets) {
             return;
         }
         for (const streak of this.streaks) {
             this.advance(streak, delta);
         }
+    }
+
+    private updateMoon() {
+        const { fajrAngle, ishaAngle, latitude, longitude } = this.sunPath.params;
+        const opacity = moonOpacityAt(new Date(this.sunPath.date), latitude, longitude, fajrAngle, ishaAngle);
+        this.moon.visible = opacity > 0.02;
+        (this.moon.material as MeshBasicMaterial).opacity = opacity;
+        (this.moonGlow.material as MeshBasicMaterial).opacity = opacity * 0.22;
+        if (!this.moon.visible) {
+            return;
+        }
+        const { altitude, azimuth } = getMoonPosition(new Date(this.sunPath.date), latitude, longitude);
+        // ponytail: visual floor — at maghrib the real moon is often below the island; use suncalc when higher.
+        const alt = MathUtils.degToRad(Math.max(altitude, 32));
+        const az = MathUtils.degToRad(azimuth + 180);
+        this.moon.position.set(
+            MOON_RADIUS * Math.cos(alt) * Math.cos(az),
+            MOON_RADIUS * Math.sin(alt),
+            MOON_RADIUS * Math.cos(alt) * Math.sin(az),
+        );
     }
 
     private makeStreak(): Streak {

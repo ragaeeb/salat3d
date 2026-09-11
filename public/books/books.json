@@ -1,0 +1,9 @@
+{
+    "books": [
+        { "color": "#6ea8ff", "file": "fajr.md", "id": "fajr", "title": "Fajr" },
+        { "color": "#e8c547", "file": "dhuhr.md", "id": "dhuhr", "title": "Dhuhr" },
+        { "color": "#e08a3c", "file": "asr.md", "id": "asr", "title": "Asr" },
+        { "color": "#c44c3a", "file": "maghrib.md", "id": "maghrib", "title": "Maghrib" },
+        { "color": "#4a4680", "file": "isha.md", "id": "isha", "title": "Isha" }
+    ]
+}

@@ -74,4 +74,10 @@ describe('SunPath', () => {
         sunPath.tick(0.001);
         expect(sunPath.params.month).toBe(9);
     });
+
+    it('labels a prayer time from the book id', () => {
+        const sunPath = createSunPath();
+        expect(sunPath.prayerTimeLabel('fajr')).toMatch(/\d{1,2}:\d{2}/);
+        expect(sunPath.prayerTimeLabel('nope')).toBeUndefined();
+    });
 });

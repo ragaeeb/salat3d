@@ -106,6 +106,18 @@ class SunPath {
         this.prayerText.textContent = `Current: ${prayerName}`;
     }
 
+    prayerTimeLabel(id: string) {
+        const date = new Date(this.date);
+        const coordinates = new Coordinates(this.params.latitude, this.params.longitude);
+        const params = new CalculationParameters('Other', this.params.fajrAngle, this.params.ishaAngle);
+        const prayerTimes = new PrayerTimes(coordinates, date, params);
+        const prayer = prayerTimes[id as keyof PrayerTimes];
+        if (!(prayer instanceof Date) || Number.isNaN(prayer.getTime())) {
+            return undefined;
+        }
+        return prayer.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    }
+
     getSunPosition(date: number | Date) {
         const { altitude, azimuth } = getPosition(new Date(date), this.params.latitude, this.params.longitude);
         const alt = MathUtils.degToRad(altitude);

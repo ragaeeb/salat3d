@@ -1,0 +1,12 @@
+{
+    "scrolls": [
+        { "file": "intention.md", "id": "intention", "title": "Intention" },
+        { "file": "brother.md", "id": "brother", "title": "For your brother" },
+        { "file": "strength.md", "id": "strength", "title": "Strength" },
+        { "file": "charity.md", "id": "charity", "title": "A smile" },
+        { "file": "knowledge.md", "id": "knowledge", "title": "Knowledge" },
+        { "file": "manners.md", "id": "manners", "title": "Good manners" },
+        { "file": "speech.md", "id": "speech", "title": "Speech" },
+        { "file": "five.md", "id": "five", "title": "Five before five" }
+    ]
+}
