@@ -9,7 +9,7 @@ function createBirdCamera(): PerspectiveCamera {
     );
 
     // move the camera back so we can view the scene
-    camera.position.set(50, 50, 50);
+    camera.position.set(90, 80, 90);
     camera.lookAt(0, 0, 0);
 
     return camera;

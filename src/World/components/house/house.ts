@@ -1,7 +1,29 @@
-import { Box3, Vector3, Mesh } from 'three';
+import { Box3, type Mesh, type MeshStandardMaterial, Vector3 } from 'three';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { setupModel } from './setupModel';
+
+function polishHouseMesh(mesh: Mesh) {
+    const material = mesh.material;
+    if (Array.isArray(material) || !material) {
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        return;
+    }
+    const std = material as MeshStandardMaterial;
+    const glass = std.name === 'esquadria.vidro';
+    if ('envMapIntensity' in std) {
+        std.envMapIntensity = glass ? 1.3 : 0.55;
+    }
+    if (glass) {
+        std.metalness = 0.15;
+        std.opacity = 0.4;
+        std.roughness = 0.06;
+        std.transparent = true;
+    }
+    mesh.castShadow = !glass;
+    mesh.receiveShadow = true;
+}
 
 async function loadHouse() {
     const dracoLoader = new DRACOLoader();
@@ -12,14 +34,7 @@ async function loadHouse() {
     const house = setupModel(houseData);
     house.traverse((n) => {
         if ((n as Mesh).isMesh) {
-            const material = (n as Mesh).material;
-            const matName = Array.isArray(material) ? '' : (material as any).name;
-            if (matName === 'esquadria.vidro') {
-                n.castShadow = false;
-            } else {
-                n.castShadow = true;
-                n.receiveShadow = true;
-            }
+            polishHouseMesh(n as Mesh);
         }
     });
 

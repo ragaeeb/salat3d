@@ -1,20 +1,27 @@
 import gsap from 'gsap';
 import type GUI from 'lil-gui';
-import type { Mesh, PerspectiveCamera, Scene, WebGLRenderer } from 'three';
+import { type Mesh, type PerspectiveCamera, PMREMGenerator, type Scene, type WebGLRenderer } from 'three';
 import type { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { createBase } from './components/base';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { createBase, GROUND_RADIUS } from './components/base';
 import { createBirdCamera } from './components/birdCamera';
 import { loadBirds } from './components/birds/birds';
 import { createFirstPersonCamera } from './components/firstPersonCamera';
+import { createGarden } from './components/garden';
 import { createDirectionalLightHelper, createShadowCameraHelper } from './components/helpers';
 import { loadHouse } from './components/house/house';
+import { createLibrary } from './components/library';
 import { createLights } from './components/lights';
+import { createMasjid } from './components/masjid';
 import { createScene } from './components/scene';
+import { createScrolls } from './components/scrolls';
 import { createSunSphere } from './components/sunSphere';
+import { createBookReader } from './systems/BookReader';
 import { createControls } from './systems/controls';
 import { DynamicSky, type SkyControl } from './systems/DynamicSky';
 import { createGUI } from './systems/gui';
 import { Loop } from './systems/Loop';
+import { NightSky } from './systems/NightSky';
 import { createPlayer } from './systems/player';
 import { Resizer } from './systems/Resizer';
 import { createRenderer } from './systems/renderer';
@@ -31,6 +38,8 @@ class World {
     private resizer: Resizer;
 
     private gui: GUI;
+    private ground: ReturnType<typeof createBase>;
+    private sunPath: SunPath;
     private tl: gsap.core.Timeline;
 
     constructor(container: Element) {
@@ -65,7 +74,7 @@ class World {
             showAnalemmas: true,
             showSunDayPath: true,
             showSunSurface: true,
-            timeSpeed: 100,
+            timeSpeed: 1,
         };
 
         const skyControl: SkyControl = {
@@ -76,28 +85,51 @@ class World {
             turbidity: 10,
         };
 
-        const { ambientLight, sunLight } = createLights();
-        sunLight.shadow.camera.top = params.radius;
-        sunLight.shadow.camera.bottom = -params.radius;
-        sunLight.shadow.camera.left = -params.radius;
-        sunLight.shadow.camera.right = params.radius;
+        const { ambientLight, hemisphereLight, sunLight } = createLights();
+        sunLight.shadow.camera.top = GROUND_RADIUS;
+        sunLight.shadow.camera.bottom = -GROUND_RADIUS;
+        sunLight.shadow.camera.left = -GROUND_RADIUS;
+        sunLight.shadow.camera.right = GROUND_RADIUS;
         sunLight.shadow.bias = params.shadowBias;
 
         const sunSphere = createSunSphere();
 
-        const base = createBase(params);
-        const sunPath = new SunPath(params, sunSphere, sunLight, base);
+        this.ground = createBase(params);
+        this.sunPath = new SunPath(params, sunSphere, sunLight, this.ground);
+        this.sunPath.sunPathLight.add(createGarden());
 
-        const sky = new DynamicSky(skyControl, sunPath.sphereLight, this.renderer);
+        const pmrem = new PMREMGenerator(this.renderer);
+        const room = new RoomEnvironment();
+        this.scene.environment = pmrem.fromScene(room, 0.04).texture;
+        this.scene.environmentIntensity = 0.4;
+        room.dispose();
+        pmrem.dispose();
+
+        const sky = new DynamicSky(skyControl, this.sunPath.sphereLight, this.renderer);
 
         const sunHelper = createDirectionalLightHelper(sunLight);
         const sunShadowHelper = createShadowCameraHelper(sunLight);
         // const axesHelper = createAxesHelper(30)
         sunShadowHelper.visible = false;
 
-        this.loop.updatables.push(base, this.controls, sunPath, sky);
+        const nightSky = new NightSky(this.sunPath);
+        this.loop.updatables.push(this.ground, this.controls, this.sunPath, sky, nightSky);
 
-        this.scene.add(sky.sky, ambientLight, sunHelper, sunShadowHelper, sunPath.sunPathLight);
+        this.scene.add(
+            sky.sky,
+            ambientLight,
+            hemisphereLight,
+            sunHelper,
+            sunShadowHelper,
+            this.sunPath.sunPathLight,
+            sunLight.target,
+        );
+
+        navigator.geolocation?.getCurrentPosition(({ coords }) => {
+            params.latitude = coords.latitude;
+            params.longitude = coords.longitude;
+            this.sunPath.updateLocation();
+        });
 
         const cameraControl = {
             birdView: () => {
@@ -120,7 +152,7 @@ class World {
             sunLight,
             sunHelper,
             sunShadowHelper,
-            sunPath,
+            this.sunPath,
             this.controls,
             skyControl,
             cameraControl,
@@ -133,14 +165,36 @@ class World {
     async init() {
         const { house } = await loadHouse();
         const birds = await loadBirds();
-        for (var b = 0; b < birds.children.length; b++) {
+        for (let b = 0; b < birds.children.length; b++) {
             // Cast to any because birds children might not implement Updatable interface strictly in Three types, but we added tick
             this.loop.updatables.push(birds.children[b] as any);
         }
-        this.scene.add(house, birds);
+        const { books, group: library } = await createLibrary();
+        const { group: scrolls, meshes: scrollMeshes } = await createScrolls();
+        const masjid = createMasjid();
+        this.scene.add(house, birds, library, masjid, scrolls);
         this.tl.to(birds.position, { delay: 1, duration: 60, x: 100, z: 120 });
-        const player = createPlayer(this.firstPersonCamera, house);
-        this.loop.updatables.push(player);
+        const decorations = [...this.ground.children];
+        this.ground.remove(...decorations);
+        const garden = this.sunPath.sunPathLight.getObjectByName('garden');
+        const player = createPlayer(
+            this.firstPersonCamera,
+            house,
+            this.ground,
+            library,
+            masjid,
+            garden?.getObjectByName('gardenColliders'),
+            garden?.getObjectByName('fountain'),
+            garden?.getObjectByName('picnic'),
+        );
+        this.ground.add(...decorations);
+        const reader = createBookReader({
+            camera: this.firstPersonCamera,
+            isActive: () => this.activeCamera === this.firstPersonCamera,
+            items: [...books, ...scrollMeshes],
+            sunPath: this.sunPath,
+        });
+        this.loop.updatables.push(player, reader);
         house.traverse((n) => {
             if ((n as Mesh).isMesh) {
                 const material = (n as Mesh).material;

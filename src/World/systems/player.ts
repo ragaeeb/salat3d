@@ -1,8 +1,9 @@
 import { type Camera, type Object3D, Vector3 } from 'three';
 import { Capsule } from 'three/examples/jsm/math/Capsule.js';
 import { Octree } from 'three/examples/jsm/math/Octree.js';
+import { isBookOpen } from './BookReader';
 
-function createPlayer(camera: Camera, geometry: Object3D) {
+function createPlayer(camera: Camera, ...colliders: (Object3D | undefined)[]) {
     const GRAVITY = 30;
     const STEPS_PER_FRAME = 5;
 
@@ -128,7 +129,11 @@ function createPlayer(camera: Camera, geometry: Object3D) {
             }
         }
     }
-    worldOctree.fromGraphNode(geometry);
+    for (const collider of colliders) {
+        if (collider) {
+            worldOctree.fromGraphNode(collider);
+        }
+    }
 
     function teleportPlayerIfOob() {
         if (camera.position.y <= -25) {
@@ -143,7 +148,9 @@ function createPlayer(camera: Camera, geometry: Object3D) {
     playerCollider.tick = (delta) => {
         for (let i = 0; i < STEPS_PER_FRAME; i++) {
             const deltaTime = Math.min(0.05, delta) / STEPS_PER_FRAME;
-            controls(deltaTime);
+            if (!isBookOpen()) {
+                controls(deltaTime);
+            }
 
             updatePlayer(deltaTime);
 

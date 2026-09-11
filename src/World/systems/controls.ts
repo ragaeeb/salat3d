@@ -10,8 +10,8 @@ function createControls(camera: Camera, canvas: HTMLElement) {
     // this.controls.autoRotate = true;
     controls.enableDamping = true;
     controls.autoRotate = true;
-    controls.minDistance = 30;
-    controls.maxDistance = 200;
+    controls.minDistance = 40;
+    controls.maxDistance = 300;
     // controls.maxPolarAngle = Math.PI / 2
 
     controls.tick = (_delta: number) => controls.update();

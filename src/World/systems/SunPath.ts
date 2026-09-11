@@ -14,6 +14,7 @@ import {
     MeshBasicMaterial,
     type Object3D,
 } from 'three';
+import { nightSkyPhase } from './NightSky';
 
 export interface SunPathParams {
     hour: number;
@@ -43,12 +44,12 @@ class SunPath {
     sunLight: DirectionalLight;
     sunPathLight: Group;
     sphereLight: Group;
+    nightPhase = { comets: false, stars: false };
 
     constructor(params: SunPathParams, sunSphere: Mesh, sunLight: DirectionalLight, base: Object3D) {
         this.params = params;
-        // this.date = new Date('2022-01-01T07:00:00').getTime() // Overwritten immediately
-        this.date = new Date().setHours(params.hour);
-        this.date = new Date(this.date).setMonth(params.month - 1);
+        const now = new Date();
+        this.date = new Date(now.getFullYear(), params.month - 1, params.day, params.hour, params.minute).getTime();
         this.timeText = document.querySelector('#time-display');
         this.prayerText = document.querySelector('#prayer-display');
         this.sunLight = sunLight;
@@ -65,11 +66,19 @@ class SunPath {
     }
 
     updatePrayerInfo() {
+        const date = new Date(this.date);
+        this.nightPhase = nightSkyPhase(
+            date,
+            this.params.latitude,
+            this.params.longitude,
+            this.params.fajrAngle,
+            this.params.ishaAngle,
+        );
+
         if (!this.timeText || !this.prayerText) {
             return;
         }
 
-        const date = new Date(this.date);
         const coordinates = new Coordinates(this.params.latitude, this.params.longitude);
         const params = new CalculationParameters('Other', this.params.fajrAngle, this.params.ishaAngle);
         const prayerTimes = new PrayerTimes(coordinates, date, params);
@@ -77,7 +86,11 @@ class SunPath {
         const currentPrayer = prayerTimes.currentPrayer(date);
 
         let prayerName = '';
-        if (currentPrayer === Prayer.None) {
+        if (this.nightPhase.comets) {
+            prayerName = 'last third of the night';
+        } else if (this.nightPhase.stars) {
+            prayerName = 'middle of the night';
+        } else if (currentPrayer === Prayer.None) {
             prayerName = 'Waiting for Fajr';
         } else {
             prayerName = currentPrayer;
@@ -93,11 +106,26 @@ class SunPath {
         this.prayerText.textContent = `Current: ${prayerName}`;
     }
 
+    prayerTimeLabel(id: string) {
+        const date = new Date(this.date);
+        const coordinates = new Coordinates(this.params.latitude, this.params.longitude);
+        const params = new CalculationParameters('Other', this.params.fajrAngle, this.params.ishaAngle);
+        const prayerTimes = new PrayerTimes(coordinates, date, params);
+        const prayer = prayerTimes[id as keyof PrayerTimes];
+        if (!(prayer instanceof Date) || Number.isNaN(prayer.getTime())) {
+            return undefined;
+        }
+        return prayer.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    }
+
     getSunPosition(date: number | Date) {
-        const sunPosition = getPosition(new Date(date), this.params.latitude, this.params.longitude);
-        const x = this.params.radius * Math.cos(sunPosition.altitude) * Math.cos(sunPosition.azimuth);
-        const z = this.params.radius * Math.cos(sunPosition.altitude) * Math.sin(sunPosition.azimuth);
-        const y = this.params.radius * Math.sin(sunPosition.altitude);
+        const { altitude, azimuth } = getPosition(new Date(date), this.params.latitude, this.params.longitude);
+        const alt = MathUtils.degToRad(altitude);
+        // suncalc v2 is north-based clockwise; existing x/z mapping is south-based.
+        const az = MathUtils.degToRad(azimuth + 180);
+        const x = this.params.radius * Math.cos(alt) * Math.cos(az);
+        const z = this.params.radius * Math.cos(alt) * Math.sin(az);
+        const y = this.params.radius * Math.sin(alt);
         return { x, y, z };
     }
 
@@ -220,7 +248,8 @@ class SunPath {
     updateSunPosition() {
         const sunPosition = this.getSunPosition(this.date);
         this.sphereLight.position.set(sunPosition.x, sunPosition.y, sunPosition.z);
-        this.sunLight.lookAt(0, 0, 0);
+        this.sunPathLight.updateMatrixWorld(true);
+        this.sunLight.target.position.set(0, 0, 0);
     }
 
     drawSunDayPath() {
@@ -255,17 +284,18 @@ class SunPath {
     }
 
     tick(delta: number) {
-        if (this.params.animateTime) {
-            const time = new Date(this.date).getTime();
-            this.date = new Date(this.date).setTime(time + delta * 1000 * this.params.timeSpeed);
-            this.params.minute = new Date(this.date).getMinutes();
-            this.params.hour = new Date(this.date).getHours();
-            this.params.day = new Date(this.date).getDate();
-            this.params.month = new Date(this.date).getMonth();
-            this.updateSunPosition();
-            this.drawSunDayPath();
-            this.updatePrayerInfo();
+        if (!this.params.animateTime) {
+            return;
         }
+        this.date = this.params.timeSpeed === 1 ? Date.now() : this.date + delta * 1000 * this.params.timeSpeed;
+        const date = new Date(this.date);
+        this.params.minute = date.getMinutes();
+        this.params.hour = date.getHours();
+        this.params.day = date.getDate();
+        this.params.month = date.getMonth() + 1;
+        this.updateSunPosition();
+        this.drawSunDayPath();
+        this.updatePrayerInfo();
     }
 }
 

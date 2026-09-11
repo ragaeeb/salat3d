@@ -1,17 +1,14 @@
-import { AmbientLight, DirectionalLight } from 'three';
+import { AmbientLight, DirectionalLight, HemisphereLight } from 'three';
 
 function createLights() {
-    const ambientLight = new AmbientLight('white', 1.7);
-    const sunLight = new DirectionalLight('white', 8);
+    const ambientLight = new AmbientLight(0xfff1e0, 0.35);
+    const hemisphereLight = new HemisphereLight(0x9ec8ff, 0x3d4a2c, 0.7);
+    const sunLight = new DirectionalLight(0xfff3d6, 8);
     sunLight.castShadow = true;
     sunLight.shadow.bias = -0.005;
-    let mapSize = 1;
-    sunLight.shadow.mapSize.set(1024 * mapSize, 1024 * mapSize);
+    sunLight.shadow.mapSize.set(2048, 2048);
 
-    // move the light right, up, and towards us
-    // sunLight.position.set(30, 30, 30);
-
-    return { ambientLight, sunLight };
+    return { ambientLight, hemisphereLight, sunLight };
 }
 
 export { createLights };
